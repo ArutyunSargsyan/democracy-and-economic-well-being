@@ -8,6 +8,8 @@ Written by: Mike Silva
 # Import libraries needed
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Read in the GapMinder Data
 print('Reading in GapMinder data')
@@ -90,37 +92,17 @@ print('Number of observations: '+ str(len(subset)) +' (rows)')
 print('Number of variables: '+ str(len(subset.columns)) +' (columns)')
 print('\n')
 
-# Create crosstabs
-ct1 = pd.crosstab(subset['incomequintiles'], subset['democracy'])
-print('The Number of Countries by Income Quintile and Level of Democracy')
+# Exploratory Analysis
+# Relationship between Continent and Level of Democracy/Economic Well-Being
+ct1 = pd.crosstab(subset['continent'], subset['democracy'])
+print('The Number of Countries by Continent and Level of Democracy')
 print(ct1)
 print('\n')
 
-pt1 = (pd.crosstab(subset['incomequintiles'], subset['democracy'])/len(subset))*100
-print('The Percent of Countries by Income Quintile and Level of Democracy')
+pt1 = (ct1/len(subset))*100
+print('The Percent of Countries by Continent and Level of Democracy')
 print(pt1)
 print('\n')
-
-ct2 = pd.crosstab(subset['incomequartiles'], subset['democracy'])
-print('The Number of Countries by Income Quartile and Level of Democracy')
-print(ct2)
-print('\n')
-
-pt2 = (pd.crosstab(subset['incomequartiles'], subset['democracy'])/len(subset))*100
-print('The Percent of Countries by Income Quartile and Level of Democracy')
-print(pt2)
-print('\n')
-
-ct3 = pd.crosstab(subset['continent'], subset['democracy'])
-print('The Number of Countries by Continent and Level of Democracy')
-print(ct3)
-print('\n')
-
-pt3 = (pd.crosstab(subset['continent'], subset['democracy'])/len(subset))*100
-print('The Percent of Countries by Continent and Level of Democracy')
-print(pt3)
-print('\n')
-
 
 print('Countries by Continent')
 country_counts = subset.groupby('continent').size()
@@ -138,11 +120,44 @@ democracy_percent = (democracy_counts / country_counts)*100
 print(democracy_percent)
 print('\n')
 
-
 print('GDP Statistics by Continent')
 gdp_mean = subset.groupby('continent')['incomeperperson'].agg([np.mean, np.std, np.median, len])
 print(gdp_mean)
+print('\n')
 
+# Economic Well-Being by Level of Democracy
+
+# Approach 1: GDP Per Capita Quintiles by Level of Democracy
+ct2 = pd.crosstab(subset['incomequintiles'], subset['democracy'])
+print('The Number of Countries by Income Quintile and Level of Democracy')
+print(ct2)
+print('\n')
+
+pt2 = (ct2/len(subset))*100
+print('The Percent of Countries by Income Quintile and Level of Democracy')
+print(pt2)
+print('\n')
+
+# Approach 2: GDP Per Capita Quartiles by Level of Democracy
+ct3 = pd.crosstab(subset['incomequartiles'], subset['democracy'])
+print('The Number of Countries by Income Quartile and Level of Democracy')
+print(ct3)
+print('\n')
+
+pt3 = (ct3/len(subset))*100
+print('The Percent of Countries by Income Quartile and Level of Democracy')
+print(pt3)
+print('\n')
+
+# Approach Number 3: Average Well-Being by Level of Democracy
 print('GDP Statistics by Level of Democracy')
 gdp_mean2 = subset.groupby('democracy')['incomeperperson'].agg([np.mean, np.std, np.median, len])
 print(gdp_mean2)
+
+# Visualize data using a boxplot
+sns.set_style("whitegrid")
+sns.set_context("poster")
+plt.figure(figsize=(14, 7))
+sns.boxplot(x="democracy", y="incomeperperson", data=subset)
+plt.ylabel('Economic Well Being (GDP Per Person)')
+plt.xlabel('Level of Democracy')
