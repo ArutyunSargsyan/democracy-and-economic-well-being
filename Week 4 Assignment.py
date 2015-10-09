@@ -74,15 +74,24 @@ print('\n')
 # Exploratory Analysis
 # Univariate Analysis
 # Economic Well-Being
+
+# Histogram
 sns.set_context('poster')
 plt.figure(figsize=(14, 7))
 sns.distplot(subset['incomeperperson'])
-plt.xlabel('Economic Well Being (GDP Per Person)')
+plt.xlabel('Economic Well-Being (GDP Per Person)')
 
+# Summary statistics
+stats = subset['incomeperperson'].describe()
+print('Economic Well-Being Summary Statistics')
+print(stats)
+print('\n')
+
+# Quartile bar chart
 sns.set_context('poster')
 plt.figure(figsize=(14, 7))
 sns.countplot(x='incomequartiles', data=subset)
-plt.xlabel('Economic Well Being (GDP Per Person) Quartile')
+plt.xlabel('Economic Well-Being (GDP Per Person) Quartile')
 plt.ylabel('Count')
 
 income_quartile_counts = subset.groupby('incomequartiles').size()
@@ -105,7 +114,7 @@ print('\n')
 # Economic Well-Being by Level of Openness
 # Visualize Mean Economic Well Being by Level of Openness
 sns.factorplot(x='openness', y='incomeperperson', data=subset, kind='bar', ci=None, size=4, aspect=4)
-plt.ylabel('Average Economic Well Being (GDP Per Person)')
+plt.ylabel('Average Economic Well-Being (GDP Per Person)')
 plt.xlabel('Level of Openness')
 
 # Mean Well-Being by Level of Openness
@@ -118,7 +127,7 @@ print('\n')
 sns.set_context('poster')
 plt.figure(figsize=(14, 7))
 sns.boxplot(x='openness', y='incomeperperson', data=subset)
-plt.ylabel('Economic Well Being (GDP Per Person)')
+plt.ylabel('Economic Well-Being (GDP Per Person)')
 plt.xlabel('Level of Openness')
 
 print('Statistics on Economic Well-Being by Level of Openness')
