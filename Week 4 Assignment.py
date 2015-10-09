@@ -10,7 +10,6 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from ggplot import *
 
 # Read in the GapMinder Data
 print('Reading in GapMinder data')
@@ -61,8 +60,8 @@ def convert_polityscore_to_category(score):
         return('5 - Autocracy')
 
 # Now we can use the function to create the new variable
-subset['democracy'] = subset['polityscore'].apply(convert_polityscore_to_category)
-subset['democracy'] = subset['democracy'].astype('category')
+subset['openness'] = subset['polityscore'].apply(convert_polityscore_to_category)
+subset['openness'] = subset['openness'].astype('category')
 
 # Create per capita GDP quartiles
 print('Creating GDP per capita quartiles')
@@ -94,39 +93,46 @@ print('\n')
 # Level of Openness
 sns.set_context('poster')
 plt.figure(figsize=(14, 7))
-sns.countplot(x='democracy', data=subset)
+sns.countplot(x='openness', data=subset)
 plt.ylabel('Count')
-plt.xlabel('Level of Democratization')
+plt.xlabel('Level of Openness')
 
-openness_counts = subset.groupby('democracy').size()
+openness_counts = subset.groupby('openness').size()
 print('The Number of Countries by Openness')
 print(openness_counts)
 print('\n')
 
-# Economic Well-Being by Level of Democracy
+# Economic Well-Being by Level of Openness
+# Visualize Mean Economic Well Being by Level of Openness
+sns.factorplot(x='openness', y='incomeperperson', data=subset, kind='bar', ci=None, size=4, aspect=4)
+plt.ylabel('Average Economic Well Being (GDP Per Person)')
+plt.xlabel('Level of Openness')
 
-# GDP Per Capita Quartiles by Level of Democracy
-ct3 = pd.crosstab(subset['incomequartiles'], subset['democracy'])
-print('The Number of Countries by Income Quartile and Level of Democracy')
-print(ct3)
+# Mean Well-Being by Level of Openness
+print('GDP Statistics by Level of Openness')
+gdp_mean = subset.groupby('openness')['incomeperperson'].agg([np.mean, np.std, len])
+print(gdp_mean)
 print('\n')
-
-pt3 = (ct3/len(subset))*100
-print('The Percent of Countries by Income Quartile and Level of Democracy')
-print(pt3)
-print('\n')
-
-# Median Well-Being by Level of Democracy
-print('GDP Statistics by Level of Democracy')
-gdp_mean2 = subset.groupby('democracy')['incomeperperson'].agg([np.mean, np.std, np.median, len])
-print(gdp_mean2)
 
 # Visualize data using a boxplot
 sns.set_context('poster')
 plt.figure(figsize=(14, 7))
-sns.boxplot(x="democracy", y="incomeperperson", data=subset)
+sns.boxplot(x='openness', y='incomeperperson', data=subset)
 plt.ylabel('Economic Well Being (GDP Per Person)')
-plt.xlabel('Level of Democracy')
+plt.xlabel('Level of Openness')
 
-#plot = ggplot(subset, aes(x = 'incomeperperson', fill='democracy')) + geom_dotplot(binwidth=100)
-#print(plot)
+print('Statistics on Economic Well-Being by Level of Openness')
+stats = subset.groupby('openness')['incomeperperson'].describe()
+print(stats)
+print('\n')
+
+# GDP Per Capita Quartiles by Level of Openness
+ct = pd.crosstab(subset['incomequartiles'], subset['openness'])
+print('The Number of Countries by Income Quartile and Level of Openness')
+print(ct)
+print('\n')
+
+pt = (ct/len(subset))*100
+print('The Percent of Countries by Income Quartile and Level of Openness')
+print(pt)
+print('\n')
