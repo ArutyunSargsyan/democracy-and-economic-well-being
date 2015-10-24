@@ -9,6 +9,7 @@ Written by: Mike Silva
 import pandas as pd
 import numpy as np
 import statsmodels.formula.api as smf
+import statsmodels.stats.multicomp as ssm
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -151,3 +152,7 @@ print('\n')
 ols_data = subset[['incomeperperson','openness']].dropna()
 model = smf.ols(formula='incomeperperson ~ C(openness)', data=ols_data).fit()
 print(model.summary())
+
+# Tukey Honestly Significantly Different
+tukey = ssm.MultiComparison(subset['incomeperperson'], subset['openness']).tukeyhsd()
+print(tukey.summary())
