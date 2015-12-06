@@ -9,8 +9,6 @@ Written by: Mike Silva
 import pandas as pd
 import numpy as np
 import statsmodels.formula.api as smf
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 # Read in the Data
 df = pd.read_csv('gapminder.csv', low_memory=False)
@@ -39,29 +37,20 @@ subset = subset[np.isfinite(subset['incomeperperson'])]
 print('Number of observations: '+ str(len(subset)) +' (rows)')
 print('\n')
 
-# These functions converts the polity score to a binary category flag
+# This function converts the polity score to a binary category flag
 def is_full_democracy(score):
     if score == 10:
         return(1)
     else:
         return(0)
-
-def is_full_democracy_text(score):
-    if score == 10:
-        return('Yes')
-    else:
-        return('No') 
 		
 # Now we can use the function to create the new variable
 subset['is_full_democracy'] = subset['polityscore'].apply(is_full_democracy)
-subset['is_full_democracy_text'] = subset['polityscore'].apply(is_full_democracy_text).astype('category')
 
-# Visualize data using a boxplot
-sns.set_context('poster')
-plt.figure(figsize=(14, 7))
-sns.boxplot(x='is_full_democracy_text', y='incomeperperson', data=subset)
-plt.ylabel('Economic Well-Being (GDP Per Person)')
-plt.xlabel('Is a Full Democracy')
+# Create frequency table
+full_democracy_counts = subset.groupby('is_full_democracy').size()
+print(full_democracy_counts)
+print('\n')
 
 # Create simple regression model
 model = smf.ols('incomeperperson ~ is_full_democracy', data=subset).fit()
