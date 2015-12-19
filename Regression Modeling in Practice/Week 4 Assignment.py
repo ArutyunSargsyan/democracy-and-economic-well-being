@@ -10,9 +10,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
-import seaborn as sns
-sns.set_style('whitegrid')
-sns.set_context('talk')
 
 # bug fix for display formats to avoid run time errors
 pd.set_option('display.float_format', lambda x:'%.2f'%x)
@@ -28,46 +25,52 @@ df['urbanrate'] = pd.to_numeric(df['urbanrate'], errors='coerce')
 subset = df[['incomeperperson', 'polityscore', 'urbanrate']].dropna()
 
 # This function converts the polity score to a category
-def convert_polityscore_to_category(score):
-    if score == 10:
-        return('1-Full Democracy')
-    elif score > 5:
-        return('2-Democracy')
-    elif score > 0:
-        return ('3-Open Anocracy')
-    elif score > -6:
-        return ('4-Closed Anocracy')
-    else:
-        return('5-Autocracy')
-
-# Now we can use the function to create the new variable
-subset['SocietyType'] = subset['polityscore'].apply(convert_polityscore_to_category)
-subset['SocietyType'] = subset['SocietyType'].astype('category')
-
-# Create bar chart
-sns.countplot(x='SocietyType', data=subset)
-plt.ylabel('Count')
-plt.xlabel('')
-
-# Set binary flag that income per person is greater than the mean
-avg_income = np.mean(subset['incomeperperson'])
-def higher_than_average_income(income):
-    if income > avg_income:
+def convert_polityscore_to_category(polityscore):
+    if polityscore == 10:
         return 1
     else:
         return 0
 
-subset['higher_than_average_income'] = subset['incomeperperson'].apply(higher_than_average_income)
+# Now we can use the function to create the new variable
+subset['full_democracy'] = subset['polityscore'].apply(convert_polityscore_to_category)
 
-counts = subset.groupby('higher_than_average_income').size()
+counts = subset.groupby('full_democracy').size()
 print(counts)
 
-##############################################################################
-# LOGISTIC REGRESSION
-##############################################################################
+# Create a threshold
+income_threshold = np.mean(subset['incomeperperson'])
+print(income_threshold)
+
+# Set binary flag that income per person is greater than the threshold
+def income_higher_than_threshold(income):
+    if income > income_threshold:
+        return 1
+    else:
+        return 0
+
+subset['high_income'] = subset['incomeperperson'].apply(income_higher_than_threshold)
+
+counts = subset.groupby('high_income').size()
+print(counts)
+
+# Create a threshold
+urbanization_threshold = np.mean(subset['urbanrate'])
+print(urbanization_threshold)
+
+# Set binary flag that urbanization rate is greater than the threshold
+def urbanrate_higher_than_threshold(urbanrate):
+    if urbanrate > urbanization_threshold:
+        return 1
+    else:
+        return 0
+
+subset['high_urbanrate'] = subset['urbanrate'].apply(urbanrate_higher_than_threshold)
+
+counts = subset.groupby('high_urbanrate').size()
+print(counts)
 
 # logistic regression with society type
-lreg1 = smf.logit(formula = 'higher_than_average_income ~ C(SocietyType)', data = subset).fit()
+lreg1 = smf.logit(formula = 'high_income ~ full_democracy', data = subset).fit()
 print (lreg1.summary())
 
 # odd ratios with 95% confidence intervals
@@ -78,7 +81,7 @@ conf.columns = ['Lower CI', 'Upper CI', 'OR']
 print (np.exp(conf))
 
 # logistic regression with society type and urbanization rate
-lreg2 = smf.logit(formula = 'higher_than_average_income ~ C(SocietyType) + urbanrate', data = subset).fit()
+lreg2 = smf.logit(formula = 'high_income ~ full_democracy + high_urbanrate', data = subset).fit()
 print (lreg2.summary())
 
 # odd ratios with 95% confidence intervals
