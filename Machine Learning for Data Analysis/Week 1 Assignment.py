@@ -8,12 +8,11 @@ Written by: Mike Silva
 # Import libraries needed
 import pandas as pd
 import numpy as np
-#import matplotlib.pylab as plt
 import sklearn as sk
 from sklearn.cross_validation import train_test_split
 from sklearn.tree import DecisionTreeClassifier
-
-from io import StringIO
+from IPython.display import Image
+from io import BytesIO
 import pydotplus as pdp
 
 # Set random number seed to make results reproducible
@@ -86,6 +85,7 @@ print(sk.metrics.accuracy_score(test_target, predictions))
 print("\n")
 
 #Displaying the decision tree
-out = StringIO()
+out = BytesIO()
 sk.tree.export_graphviz(classifier, out_file=out)
 graph=pdp.graph_from_dot_data(out.getvalue())
+Image(graph.create_png())
