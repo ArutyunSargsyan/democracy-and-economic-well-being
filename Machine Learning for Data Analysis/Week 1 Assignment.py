@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
+Machine Learning for Data Analysis
 Week 1 Assignment
+Decision Tree Classifier
 
 Written by: Mike Silva
 """
@@ -15,7 +17,7 @@ from IPython.display import Image
 from io import BytesIO
 import pydotplus as pdp
 
-# Set random number seed to make results reproducible
+# Make results reproducible
 np.random.seed(0)
 
 # bug fix for display formats to avoid run time errors
@@ -61,11 +63,11 @@ def convert_polityscore_to_category(polityscore):
 subset['full_democracy'] = subset['polityscore'].apply(convert_polityscore_to_category)
 subset['full_democracy'] = subset['full_democracy'].astype('category')
 
-"""
-Modeling and Prediction
-"""
+# Bin urban rate into quartiles
+subset['urbanrate_quartile'] = pd.qcut(subset['urbanrate'], 4, labels=False)
+
 #Split into training and testing sets
-predictors = subset[['full_democracy','urbanrate']]
+predictors = subset[['full_democracy','urbanrate_quartile']]
 targets = subset.high_income
 training_data, test_data, training_target, test_target  = train_test_split(predictors, targets, test_size=.4)
 
@@ -75,17 +77,24 @@ classifier=classifier.fit(training_data, training_target)
 
 # Check how well the classifier worked
 predictions=classifier.predict(test_data)
-
 print('Confusion Matrix:')
 print(sk.metrics.confusion_matrix(test_target,predictions))
 print("\n")
+"""
+Confusion Matrix:
+[[57  1]
+ [ 1  3]]
+"""
 
 print('Accuracy Score:')
 print(sk.metrics.accuracy_score(test_target, predictions))
 print("\n")
+"""
+Accuracy Score: 0.967741935484
+"""
 
 #Displaying the decision tree
 out = BytesIO()
-sk.tree.export_graphviz(classifier, out_file=out)
+sk.tree.export_graphviz(classifier, out_file=out, feature_names=predictors.columns)
 graph=pdp.graph_from_dot_data(out.getvalue())
 Image(graph.create_png())
