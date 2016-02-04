@@ -35,7 +35,6 @@ subset = df[['incomeperperson', 'polityscore', 'urbanrate']].dropna()
 
 # Summarize the data
 print(subset[['incomeperperson', 'urbanrate']].describe())
-print("\n")
 
 # Identify contries with a high level of income using the MAD (mean absolute deviation) method
 subset['absolute_deviations'] = np.absolute(subset['incomeperperson'] - np.median(subset['incomeperperson']))
@@ -48,9 +47,9 @@ def high_income_flag(absolute_deviations):
         return "Yes"
     else:
         return "No"
-        
-subset['high_income'] = subset['absolute_deviations'].apply(high_income_flag)
-subset['high_income'] = subset['high_income'].astype('category')
+
+subset['High Income'] = subset['absolute_deviations'].apply(high_income_flag)
+subset['High Income'] = subset['High Income'].astype('category')
 
 # This function converts the polity score to a category
 def convert_polityscore_to_category(polityscore):
@@ -60,15 +59,15 @@ def convert_polityscore_to_category(polityscore):
         return 0
 
 # Now we can use the function to create the new variable
-subset['full_democracy'] = subset['polityscore'].apply(convert_polityscore_to_category)
-subset['full_democracy'] = subset['full_democracy'].astype('category')
+subset['Is Full Democracy'] = subset['polityscore'].apply(convert_polityscore_to_category)
+subset['Is Full Democracy'] = subset['Is Full Democracy'].astype('category')
 
 # Bin urban rate into quartiles
-subset['urbanrate_quartile'] = pd.qcut(subset['urbanrate'], 4, labels=False)
+subset['Urban Rate Quartile'] = pd.qcut(subset['urbanrate'], 4, labels=False)
 
 #Split into training and testing sets
-predictors = subset[['full_democracy','urbanrate_quartile']]
-targets = subset.high_income
+predictors = subset[['Is Full Democracy','Urban Rate Quartile']]
+targets = subset[['High Income']]
 training_data, test_data, training_target, test_target  = train_test_split(predictors, targets, test_size=.4)
 
 #Build model on training data
@@ -77,21 +76,11 @@ classifier=classifier.fit(training_data, training_target)
 
 # Check how well the classifier worked
 predictions=classifier.predict(test_data)
-print('Confusion Matrix:')
 print(sk.metrics.confusion_matrix(test_target,predictions))
-print("\n")
-"""
-Confusion Matrix:
-[[57  1]
- [ 1  3]]
-"""
 
-print('Accuracy Score:')
 print(sk.metrics.accuracy_score(test_target, predictions))
-print("\n")
-"""
-Accuracy Score: 0.967741935484
-"""
+
+print(sk.metrics.classification_report(test_target, predictions))
 
 #Displaying the decision tree
 out = BytesIO()
