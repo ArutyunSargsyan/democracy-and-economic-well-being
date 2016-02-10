@@ -11,12 +11,14 @@ Written by: Mike Silva
 import pandas as pd
 import numpy as np
 import sklearn as sk
+import matplotlib.pyplot as plt
 from sklearn.cross_validation import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import ExtraTreesClassifier
 
 # Make results reproducible
 np.random.seed(1234567890)
+n_estimators=25
 
 df = pd.read_csv('gapminder.csv')
 
@@ -65,7 +67,7 @@ targets = subset['High Income']
 training_data, test_data, training_target, test_target  = train_test_split(predictors, targets, test_size=.4)
 
 # Build the random forest classifier
-classifier=RandomForestClassifier(n_estimators=25)
+classifier=RandomForestClassifier(n_estimators=n_estimators)
 classifier=classifier.fit(training_data,training_target)
 
 """
@@ -94,3 +96,18 @@ feature_name = list(predictors.columns.values)
 feature_importance = list(model.feature_importances_)
 features = pd.DataFrame({'name':feature_name, 'importance':feature_importance}).sort_values(by='importance', ascending=False)
 print(features.head(len(feature_name)))
+
+"""
+" ========================  Evaluate Number of Trees  =========================
+"""
+trees = range(n_estimators)
+accuracy = np.zeros(n_estimators)
+
+for idx in range(len(trees)):
+    classifier=RandomForestClassifier(n_estimators=idx+1)
+    classifier=classifier.fit(training_data,training_target)
+    predictions=classifier.predict(test_data)
+    accuracy[idx] = sk.metrics.accuracy_score(test_target, predictions)
+    
+plt.cla()
+plt.plot(trees, accuracy)
