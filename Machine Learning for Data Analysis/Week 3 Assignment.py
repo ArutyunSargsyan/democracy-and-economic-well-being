@@ -18,7 +18,6 @@ from sklearn import preprocessing
 
 # Make results reproducible
 np.random.seed(1234567890)
-n_estimators=25
 
 df = pd.read_csv('gapminder.csv')
 
@@ -39,6 +38,13 @@ print("\n")
 """
 " =============================  Data Management  =============================
 """
+# Remove the first variable from the list since the target is derived from it
+variables.pop(0)
+
+# Center and scale data
+for variable in variables:
+    subset[variable]=preprocessing.scale(subset[variable].astype('float64'))
+    
 # Identify contries with a high level of income using the MAD (mean absolute deviation) method
 subset['absolute_deviations'] = np.absolute(subset['incomeperperson'] - np.median(subset['incomeperperson']))
 MAD = np.mean(subset['absolute_deviations'])
@@ -47,22 +53,15 @@ MAD = np.mean(subset['absolute_deviations'])
 def high_income_flag(absolute_deviations):
     threshold = 3
     if (absolute_deviations/MAD) > threshold:
-        return "Yes"
+        return 1
     else:
-        return "No"
+        return 0
 
 subset['High Income'] = subset['absolute_deviations'].apply(high_income_flag)
-subset['High Income'] = subset['High Income'].astype('category')
-
-for variable in variables:
-    subset[variable]=preprocessing.scale(subset[variable].astype('float64'))
 
 """
 " ==========================  Build LASSO Regression  ==========================
 """
-# Remove the first variable from the list since the target is derived from it
-variables.pop(0)
-
 predictors = subset[variables]
 targets = subset['High Income']
 
@@ -76,7 +75,12 @@ model=LassoLarsCV(cv=10, precompute=False).fit(training_data, training_target)
 " ==========================  Evaluate LASSO Model  ============================
 """
 # print variable names and regression coefficients
-dict(zip(predictors.columns, model.coef_))
+feature_name = list(predictors.columns.values)
+feature_coefficient = list(model.coef_)
+features = pd.DataFrame({'Variable':feature_name, 'Regression Coefficients':feature_coefficient}).sort_values(by='Regression Coefficients', ascending=False)
+print(features.head(len(feature_name)))
+
+#print(dict(zip(predictors.columns, model.coef_)))
 
 # plot coefficient progression
 m_log_alphas = -np.log10(model.alphas_)
