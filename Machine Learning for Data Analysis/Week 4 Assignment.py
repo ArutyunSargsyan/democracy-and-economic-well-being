@@ -54,6 +54,20 @@ targets = subset[['incomeperperson', 'polityscore']]
 # Split into training and testing sets
 training_data, test_data, training_target, test_target  = train_test_split(features, targets, test_size=.3)
 
+
+"""
+" =====================  Determine the Number of Clusters  ====================
+"""
+
+# Visualize the data
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(features.iloc[:,0], features.iloc[:,1], features.iloc[:,2])
+ax.set_xlabel(features.columns.values[0])
+ax.set_ylabel(features.columns.values[1])
+ax.set_zlabel(features.columns.values[2])
+plt.show()
+ 
 # Identify number of clusters using the elbow method
 clusters=range(1,10)
 meandist=[]
@@ -64,7 +78,19 @@ for k in clusters:
     clusassign=model.predict(training_data)
     meandist.append(sum(np.min(cdist(training_data, model.cluster_centers_, 'euclidean'), axis=1)) / training_data.shape[0])
 
+# Visualize the elbow
+kIdx = 2 # K=3
+
+fig = plt.figure()
+ax = fig.add_subplot(111)
 plt.plot(clusters, meandist)
-plt.xlabel('Number of clusters')
-plt.ylabel('Average distance')
-plt.title('Selecting k with the Elbow Method')
+ax.plot(clusters[kIdx], meandist[kIdx], marker='o', markersize=12, 
+    markeredgewidth=2, markeredgecolor='r', markerfacecolor='None')
+plt.grid(True)
+plt.xlabel('Number of Clusters')
+plt.ylabel('Average Distance')
+plt.title('Selecting K with the Elbow Method')
+plt.show()
+
+
+    
