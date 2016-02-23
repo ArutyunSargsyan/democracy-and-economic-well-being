@@ -11,6 +11,7 @@ Written by: Mike Silva
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 from sklearn.cross_validation import train_test_split
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
@@ -45,12 +46,12 @@ variables.pop(0)
 for variable in variables:
     subset[variable]=preprocessing.scale(subset[variable].astype('float64'))
 
-"""
-" ==================  Split Data into Traingin and Test Sets  ==================
-"""
 features = subset[variables]
 targets = subset[['incomeperperson', 'polityscore']]
 
+"""
+" ==================  Split Data into Training and Test Sets  ==================
+"""
 # Split into training and testing sets
 training_data, test_data, training_target, test_target  = train_test_split(features, targets, test_size=.3)
 
