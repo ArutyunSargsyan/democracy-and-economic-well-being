@@ -16,6 +16,11 @@ from sklearn.cross_validation import train_test_split
 from sklearn import preprocessing
 from sklearn.cluster import KMeans
 from scipy.spatial.distance import cdist
+import statsmodels.formula.api as smf
+import statsmodels.stats.multicomp as multi 
+import seaborn as sns
+sns.set_style('whitegrid')
+sns.set_context('talk')
 
 # Make results reproducible
 np.random.seed(1234567890)
@@ -63,11 +68,13 @@ training_data, test_data, training_target, test_target  = train_test_split(featu
 # Visualize the data
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.scatter(features.iloc[:,0], features.iloc[:,1], features.iloc[:,2])
-ax.set_xlabel(features.columns.values[0])
-ax.set_ylabel(features.columns.values[1])
-ax.set_zlabel(features.columns.values[2])
+ax.scatter(training_data.iloc[:,0], training_data.iloc[:,1], training_data.iloc[:,2])
+ax.set_xlabel(training_data.columns.values[0])
+ax.set_ylabel(training_data.columns.values[1])
+ax.set_zlabel(training_data.columns.values[2])
 plt.show()
+
+sns.pairplot(training_data);
  
 # Identify number of clusters using the elbow method
 clusters=range(1,10)
@@ -80,12 +87,12 @@ for k in clusters:
     meandist.append(sum(np.min(cdist(training_data, model.cluster_centers_, 'euclidean'), axis=1)) / training_data.shape[0])
 
 # Visualize the elbow
-kIdx = 2 # K=3
+k = 3
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
 plt.plot(clusters, meandist)
-ax.plot(clusters[kIdx], meandist[kIdx], marker='o', markersize=12, 
+ax.plot(clusters[(k-1)], meandist[(k-1)], marker='o', markersize=12, 
     markeredgewidth=2, markeredgecolor='r', markerfacecolor='None')
 plt.grid(True)
 plt.xlabel('Number of Clusters')
@@ -93,5 +100,45 @@ plt.ylabel('Average Distance')
 plt.title('Selecting K with the Elbow Method')
 plt.show()
 
+"""
+" ==========================  Visualize the Clusters  =========================
+"""
+model=KMeans(n_clusters=k)
+model.fit(training_data)
+training_data['cluster'] = model.labels_
 
-    
+my_cmap = plt.cm.get_cmap('brg')
+my_cmap.set_under('w')
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection='3d')
+ax.scatter(training_data.iloc[:,0], training_data.iloc[:,1], training_data.iloc[:,2], c=training_data['cluster'], cmap=my_cmap)
+ax.set_xlabel(training_data.columns.values[0])
+ax.set_ylabel(training_data.columns.values[1])
+ax.set_zlabel(training_data.columns.values[2])
+plt.show()
+ 
+sns.pairplot(training_data, hue ='cluster');
+
+"""
+" ====================  Examine Differences Between Clusters  =================
+"""
+
+training_target['cluster'] = model.labels_
+income_model = smf.ols(formula='incomeperperson ~ C(cluster)', data=training_target).fit()
+print (income_model.summary())
+
+polityscore_model = smf.ols(formula='polityscore ~ C(cluster)', data=training_target).fit()
+print (polityscore_model.summary())
+
+print ('means for features by cluster')
+m1= training_target.groupby('cluster').mean()
+print (m1+"\n")
+
+print ('standard deviations for features by cluster')
+m2= training_target.groupby('cluster').std()
+print (m2+"\n")
+
+mc1 = multi.MultiComparison(training_target['incomeperperson'], training_target['cluster'])
+res1 = mc1.tukeyhsd()
+print(res1.summary())
