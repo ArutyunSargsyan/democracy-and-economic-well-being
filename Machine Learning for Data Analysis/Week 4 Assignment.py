@@ -19,6 +19,8 @@ from scipy.spatial.distance import cdist
 import statsmodels.formula.api as smf
 import statsmodels.stats.multicomp as multi 
 import seaborn as sns
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import ExtraTreesClassifier
 sns.set_style('whitegrid')
 sns.set_context('talk')
 
@@ -30,7 +32,8 @@ np.random.seed(1234567890)
 
 df = pd.read_csv('gapminder.csv')
 
-variables = ['incomeperperson', 'lifeexpectancy', 'internetuserate','urbanrate']
+variables = ['incomeperperson', 'alcconsumption', 'co2emissions', 'femaleemployrate', 
+                'internetuserate', 'lifeexpectancy','polityscore','employrate','urbanrate'] 
 
 # convert to numeric format
 for variable in variables:
@@ -46,13 +49,58 @@ print("\n")
 """
 " =============================  Data Management  =============================
 """
+n_estimators=25
+
+subset['incomequartiles'] = pd.cut(subset['incomeperperson'], 3, labels=['0%-33%','34%-66%','67%-100%'])
+subset['incomequartiles'] = subset['incomequartiles'].astype('category')
+
+variables.pop(0)
+
+predictors = subset[variables]
+targets = subset['incomequartiles']
+
+#Split into training and testing sets+
+training_data, test_data, training_target, test_target  = train_test_split(predictors, targets, test_size=.3)
+
+# Build the random forest classifier
+classifier=RandomForestClassifier(n_estimators=n_estimators)
+classifier=classifier.fit(training_data,training_target)
+
+predictions=classifier.predict(test_data)
+
+# Fit an Extra Trees model to the data
+model = ExtraTreesClassifier()
+model.fit(training_data,training_target)
+
+# Display the relative importance of each attribute
+feature_name = list(predictors.columns.values)
+feature_importance = list(model.feature_importances_)
+features = pd.DataFrame({'name':feature_name, 'importance':feature_importance}).sort_values(by='importance', ascending=False)
+print(features.head(len(feature_name)))
+
+variables = ['incomeperperson', 'lifeexpectancy', 'internetuserate', 'urbanrate'] 
+
+# convert to numeric format
+for variable in variables:
+    df[variable] = pd.to_numeric(df[variable], errors='coerce')
+
+# listwise deletion of missing values
+subset = df[variables].dropna()
+
+# Print the rows and columns of the data frame
+print('Size of study data')
+print(subset.shape)
+
+subset['incomequartiles'] = pd.cut(subset['incomeperperson'], 3, labels=['0%-33%','34%-66%','67%-100%'])
+subset['incomequartiles'] = subset['incomequartiles'].astype('category')
+
 # Remove the first variable from the list since the target is derived from it
 variables.pop(0)
 
 # Center and scale data
 for variable in variables:
     subset[variable]=preprocessing.scale(subset[variable].astype('float64'))
-
+    
 features = subset[variables]
 targets = subset[['incomeperperson']]
 
@@ -67,18 +115,6 @@ print(training_data.shape)
 """
 " =====================  Determine the Number of Clusters  ====================
 """
-
-# Visualize the data
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.scatter(training_data.iloc[:,0], training_data.iloc[:,1], training_data.iloc[:,2])
-ax.set_xlabel(training_data.columns.values[0])
-ax.set_ylabel(training_data.columns.values[1])
-ax.set_zlabel(training_data.columns.values[2])
-plt.show()
-
-sns.pairplot(training_data);
- 
 # Identify number of clusters using the elbow method
 clusters=range(1,10)
 meandist=[]
