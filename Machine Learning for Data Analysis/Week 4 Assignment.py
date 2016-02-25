@@ -22,12 +22,15 @@ import seaborn as sns
 sns.set_style('whitegrid')
 sns.set_context('talk')
 
+# Eliminate false positive SettingWithCopyWarning
+pd.options.mode.chained_assignment = None
+
 # Make results reproducible
 np.random.seed(1234567890)
 
 df = pd.read_csv('gapminder.csv')
 
-variables = ['incomeperperson', 'polityscore', 'internetuserate', 'lifeexpectancy','urbanrate']
+variables = ['incomeperperson', 'lifeexpectancy', 'internetuserate','urbanrate']
 
 # convert to numeric format
 for variable in variables:
@@ -45,21 +48,21 @@ print("\n")
 """
 # Remove the first variable from the list since the target is derived from it
 variables.pop(0)
-variables.pop(0)
 
 # Center and scale data
 for variable in variables:
     subset[variable]=preprocessing.scale(subset[variable].astype('float64'))
 
 features = subset[variables]
-targets = subset[['incomeperperson', 'polityscore']]
+targets = subset[['incomeperperson']]
 
 """
 " ==================  Split Data into Training and Test Sets  ==================
 """
 # Split into training and testing sets
 training_data, test_data, training_target, test_target  = train_test_split(features, targets, test_size=.3)
-
+print('Size of training data')
+print(training_data.shape)
 
 """
 " =====================  Determine the Number of Clusters  ====================
@@ -128,16 +131,13 @@ training_target['cluster'] = model.labels_
 income_model = smf.ols(formula='incomeperperson ~ C(cluster)', data=training_target).fit()
 print (income_model.summary())
 
-polityscore_model = smf.ols(formula='polityscore ~ C(cluster)', data=training_target).fit()
-print (polityscore_model.summary())
-
 print ('means for features by cluster')
 m1= training_target.groupby('cluster').mean()
-print (m1+"\n")
+print (m1)
 
 print ('standard deviations for features by cluster')
 m2= training_target.groupby('cluster').std()
-print (m2+"\n")
+print (m2)
 
 mc1 = multi.MultiComparison(training_target['incomeperperson'], training_target['cluster'])
 res1 = mc1.tukeyhsd()
