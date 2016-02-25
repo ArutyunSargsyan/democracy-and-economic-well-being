@@ -47,7 +47,7 @@ print('Size of study data')
 print(subset.shape)
 print("\n")
 """
-" =============================  Data Management  =============================
+"===============  Random Forest to Select Clustering Variables  ===============
 """
 n_estimators=25
 
@@ -60,7 +60,7 @@ predictors = subset[variables]
 targets = subset['incomequartiles']
 
 #Split into training and testing sets+
-training_data, test_data, training_target, test_target  = train_test_split(predictors, targets, test_size=.3)
+training_data, test_data, training_target, test_target  = train_test_split(predictors, targets, test_size=.25)
 
 # Build the random forest classifier
 classifier=RandomForestClassifier(n_estimators=n_estimators)
@@ -78,6 +78,9 @@ feature_importance = list(model.feature_importances_)
 features = pd.DataFrame({'name':feature_name, 'importance':feature_importance}).sort_values(by='importance', ascending=False)
 print(features.head(len(feature_name)))
 
+"""
+" =============================  Data Management  =============================
+"""
 variables = ['incomeperperson', 'lifeexpectancy', 'internetuserate', 'urbanrate'] 
 
 # convert to numeric format
@@ -126,7 +129,7 @@ for k in clusters:
     meandist.append(sum(np.min(cdist(training_data, model.cluster_centers_, 'euclidean'), axis=1)) / training_data.shape[0])
 
 # Visualize the elbow
-k = 3
+k = 2
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
